@@ -1,0 +1,26 @@
+group 'com.avikdas.raytracer'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: 'application'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compileOnly "org.projectlombok:lombok:1.16.16"
+}
+
+jar {
+    manifest {
+        attributes(
+            'Main-Class': 'com.avikdas.raytracer.RayTracer'
+        )
+    }
+}
+
+mainClassName = 'com.avikdas.raytracer.RayTracer'
