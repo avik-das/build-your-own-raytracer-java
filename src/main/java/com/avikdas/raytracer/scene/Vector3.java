@@ -32,6 +32,12 @@ public class Vector3 {
         );
     }
 
+    float dot(Vector3 other) {
+        return x * other.x +
+                y * other.y +
+                z * other.z;
+    }
+
     public static Vector3 lerp(Vector3 start, Vector3 end, float t) {
         return start.times(1 - t).plus(end.times(t));
     }
