@@ -73,6 +73,8 @@ public class RayTracer {
                 .stream()
                 .filter(light ->
                         light.getPosition().minus(point).dot(normal) > 0)
+                .filter(light ->
+                        !isPointInShadowFromLight(scene, object, point, light))
                 .map(light -> {
                     Vector3 l = light.getPosition().minus(point).normalized();
                     Vector3 r = normal.times(l.dot(normal) * 2).minus(l);
@@ -97,5 +99,29 @@ public class RayTracer {
                 .times(scene.getAmbientLight());
 
         return ambient.plus(lightContributions);
+    }
+
+    private boolean isPointInShadowFromLight(
+            Scene scene,
+            SceneObject objectToExclude,
+            Vector3 point,
+            Light light) {
+        Vector3 direction = light.getPosition().minus(point);
+        Ray shadowRay = new Ray(point, direction);
+
+        return scene
+                .getObjects()
+                .stream()
+                .filter(obj -> obj != objectToExclude)
+                .map(obj -> obj
+                        .earliestIntersection(shadowRay)
+                        .map(t -> new RayCastHit(
+                                obj,
+                                t,
+                                null)
+                        ))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .anyMatch(hit -> hit.getT() <= 1);
     }
 }
