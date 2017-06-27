@@ -5,6 +5,8 @@ import com.avikdas.raytracer.scene.Scene;
 import com.avikdas.raytracer.scene.Vector3;
 import lombok.Value;
 
+import java.util.Optional;
+
 @Value
 public class RayTracer {
     Scene scene;
@@ -33,10 +35,20 @@ public class RayTracer {
                 point.minus(scene.getCamera())
         );
 
-        return new Color(
-                (ray.getDirection().getX() + 1.92f) / 3.84f,
-                (ray.getDirection().getY() + 1.08f) / 2.16f,
-                ray.getDirection().getZ() / -4
-        );
+        return colorFromAnyObjectHit(ray);
+    }
+
+    private Color colorFromAnyObjectHit(Ray ray) {
+        return scene
+                .getObjects()
+                .stream()
+                .map(obj -> obj
+                        .earliestIntersection(ray)
+                        .map(t -> new RayCastHit(obj, t)))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .min((h0, h1) -> (int) Math.signum(h0.getT() - h1.getT()))
+                .map(hit -> hit.getObject().getMaterial().getKDiffuse())
+                .orElse(Color.BLACK);
     }
 }
