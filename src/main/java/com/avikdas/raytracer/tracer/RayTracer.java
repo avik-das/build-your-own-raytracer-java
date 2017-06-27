@@ -1,8 +1,6 @@
 package com.avikdas.raytracer.tracer;
 
-import com.avikdas.raytracer.scene.Color;
-import com.avikdas.raytracer.scene.Scene;
-import com.avikdas.raytracer.scene.Vector3;
+import com.avikdas.raytracer.scene.*;
 import lombok.Value;
 
 import java.util.Optional;
@@ -35,7 +33,7 @@ public class RayTracer {
                 point.minus(scene.getCamera())
         );
 
-        return colorFromAnyObjectHit(ray);
+        return colorFromAnyObjectHit(ray).clamped();
     }
 
     private Color colorFromAnyObjectHit(Ray ray) {
@@ -44,11 +42,60 @@ public class RayTracer {
                 .stream()
                 .map(obj -> obj
                         .earliestIntersection(ray)
-                        .map(t -> new RayCastHit(obj, t)))
+                        .map(t -> new RayCastHit(
+                                obj,
+                                t,
+                                obj.normalAt(ray.at(t))
+                        )))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .min((h0, h1) -> (int) Math.signum(h0.getT() - h1.getT()))
-                .map(hit -> hit.getObject().getMaterial().getKDiffuse())
+                .map(hit -> phongLightingAtPoint(
+                        scene,
+                        hit.getObject(),
+                        ray.at(hit.getT()),
+                        hit.getNormal(),
+                        ray.getDirection().inverted().normalized()
+                ))
                 .orElse(Color.BLACK);
+    }
+
+    private Color phongLightingAtPoint(
+            Scene scene,
+            SceneObject object,
+            Vector3 point,
+            Vector3 normal,
+            Vector3 view) {
+        Material material = object.getMaterial();
+
+        Color lightContributions = scene
+                .getLights()
+                .stream()
+                .filter(light ->
+                        light.getPosition().minus(point).dot(normal) > 0)
+                .map(light -> {
+                    Vector3 l = light.getPosition().minus(point).normalized();
+                    Vector3 r = normal.times(l.dot(normal) * 2).minus(l);
+
+                    Color diffuse = light
+                            .getIntensityDiffuse()
+                            .times(material.getKDiffuse())
+                            .times(l.dot(normal));
+
+                    Color specular = light
+                            .getIntensitySpecular()
+                            .times(material.getKSpecular())
+                            .times((float) Math.pow(
+                                    r.dot(view), material.getAlpha()));
+
+                    return diffuse.plus(specular);
+                })
+                .reduce(Color.BLACK, Color::plus);
+
+        Color ambient = material
+                .getKAmbient()
+                .times(scene.getAmbientLight());
+
+        return ambient.plus(lightContributions);
     }
 }
