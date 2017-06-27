@@ -8,7 +8,7 @@ public class Vector3 {
     float y;
     float z;
 
-    private Vector3 times(float scalar) {
+    public Vector3 times(float scalar) {
         return new Vector3(
                 x * scalar,
                 y * scalar,
@@ -16,7 +16,7 @@ public class Vector3 {
         );
     }
 
-    private Vector3 plus(Vector3 other) {
+    public Vector3 plus(Vector3 other) {
         return new Vector3(
                 x + other.x,
                 y + other.y,
@@ -32,10 +32,22 @@ public class Vector3 {
         );
     }
 
-    float dot(Vector3 other) {
+    public Vector3 inverted() {
+        return this.times(-1);
+    }
+
+    public float dot(Vector3 other) {
         return x * other.x +
                 y * other.y +
                 z * other.z;
+    }
+
+    public float norm() {
+        return (float) Math.sqrt(this.dot(this));
+    }
+
+    public Vector3 normalized() {
+        return this.times(1 / norm());
     }
 
     public static Vector3 lerp(Vector3 start, Vector3 end, float t) {

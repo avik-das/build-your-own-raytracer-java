@@ -33,4 +33,9 @@ public class Sphere implements SceneObject {
                 Optional.of(min) :
                 Optional.empty();
     }
+
+    @Override
+    public Vector3 normalAt(Vector3 point) {
+        return point.minus(center).normalized();
+    }
 }
