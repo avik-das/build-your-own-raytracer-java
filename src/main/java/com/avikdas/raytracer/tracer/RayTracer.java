@@ -7,6 +7,8 @@ import java.util.Optional;
 
 @Value
 public class RayTracer {
+    private static final int NUM_BOUNCES = 3;
+
     Scene scene;
     int w;
     int h;
@@ -33,10 +35,10 @@ public class RayTracer {
                 point.minus(scene.getCamera())
         );
 
-        return colorFromAnyObjectHit(ray).clamped();
+        return colorFromAnyObjectHit(NUM_BOUNCES, ray).clamped();
     }
 
-    private Color colorFromAnyObjectHit(Ray ray) {
+    private Color colorFromAnyObjectHit(int numBounces, Ray ray) {
         return scene
                 .getObjects()
                 .stream()
@@ -50,13 +52,41 @@ public class RayTracer {
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .min((h0, h1) -> (int) Math.signum(h0.getT() - h1.getT()))
-                .map(hit -> phongLightingAtPoint(
-                        scene,
-                        hit.getObject(),
-                        ray.at(hit.getT()),
-                        hit.getNormal(),
-                        ray.getDirection().inverted().normalized()
-                ))
+                .map(hit -> {
+                    Vector3 point = ray.at(hit.getT());
+                    Vector3 view = ray.getDirection().inverted().normalized();
+
+                    Color color = phongLightingAtPoint(
+                            scene,
+                            hit.getObject(),
+                            point,
+                            hit.getNormal(),
+                            view
+                    );
+
+                    if (numBounces > 0) {
+                        Vector3 reflection = hit.getNormal()
+                                .times(view.dot(hit.getNormal()))
+                                .times(2)
+                                .minus(view);
+
+                        Color reflectedColor = colorFromAnyObjectHit(
+                                numBounces - 1,
+                                new Ray(point, reflection)
+                        );
+
+                        color = color.plus(
+                                reflectedColor.times(
+                                        hit
+                                                .getObject()
+                                                .getMaterial()
+                                                .getKReflection()
+                                )
+                        );
+                    }
+
+                    return color;
+                })
                 .orElse(Color.BLACK);
     }
 
