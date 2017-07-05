@@ -8,6 +8,10 @@ import java.util.Optional;
 @Value
 public class RayTracer {
     private static final int NUM_BOUNCES = 3;
+    private static final int NUM_SAMPLES_PER_PIXEL_PER_DIRECTION = 2;
+    private static final int NUM_SAMPLES_PER_PIXEL =
+            NUM_SAMPLES_PER_PIXEL_PER_DIRECTION *
+                    NUM_SAMPLES_PER_PIXEL_PER_DIRECTION;
 
     Scene scene;
     int w;
@@ -17,6 +21,25 @@ public class RayTracer {
         float xt = ((float) x) / w;
         float yt = ((float) h - y - 1) / h;
 
+        float dx = 1f / (w * NUM_SAMPLES_PER_PIXEL_PER_DIRECTION);
+        float dy = 1f / (h * NUM_SAMPLES_PER_PIXEL_PER_DIRECTION);
+
+        Color color = Color.BLACK;
+        for (int xi = 0; xi < NUM_SAMPLES_PER_PIXEL_PER_DIRECTION; xi++) {
+            for (int yi = 0; yi < NUM_SAMPLES_PER_PIXEL_PER_DIRECTION; yi++) {
+                color = color.plus(
+                        tracedValueAtPositionOnImagePlane(
+                                xt + dx * xi,
+                                yt + dy * yi
+                        )
+                );
+            }
+        }
+
+        return color.divide(NUM_SAMPLES_PER_PIXEL).clamped();
+    }
+
+    private Color tracedValueAtPositionOnImagePlane(float xt, float yt) {
         Vector3 top = Vector3.lerp(
                 scene.getImagePlane().getTopLeft(),
                 scene.getImagePlane().getTopRight(),
