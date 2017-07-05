@@ -27,6 +27,14 @@ public class Color {
         );
     }
 
+    public Color divide(float num) {
+        return new Color(
+                r / num,
+                g / num,
+                b / num
+        );
+    }
+
     public Color plus(Color other) {
         return new Color(
                 r + other.r,
