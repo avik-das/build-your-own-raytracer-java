@@ -134,7 +134,7 @@ public class RayTracer {
 
                     Color diffuse = light
                             .getIntensityDiffuse()
-                            .times(material.getKDiffuse())
+                            .times(material.getDiffuseColor(normal))
                             .times(l.dot(normal));
 
                     Color specular = light
