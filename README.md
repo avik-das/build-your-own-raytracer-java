@@ -14,7 +14,7 @@ cd build-your-own-raytracer-java
 gradle build
 
 # Run it, outputting to a file called "test.png" in the current directory
-java -jar build/libs/raytracer-java-1.0-SNAPSHOT.jar test.png
+java -jar build/libs/build-your-own-raytracer-java-1.0-SNAPSHOT.jar test.png
 ```
 
 Scene Definition
